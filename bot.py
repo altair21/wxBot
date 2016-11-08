@@ -21,30 +21,36 @@ class TulingWXBot(WXBot):
             pass
         print 'tuling_key:', self.tuling_key
 
-    def tuling_auto_reply(self, uid, msg):
+    def tuling_auto_reply(self, uid, msg, retryTimes):
         if self.tuling_key:
-            url = "http://www.tuling123.com/openapi/api"
-            user_id = uid.replace('@', '')[:30]
-            body = {'key': self.tuling_key, 'info': msg.encode('utf8'), 'userid': user_id}
-            r = requests.post(url, data=body)
-            respond = json.loads(r.text)
-            result = ''
-            if respond['code'] == 100000:
-                result = respond['text'].replace('<br>', '  ')
-            elif respond['code'] == 200000:
-                if ('text' in respond):
+            try:
+                url = "http://www.tuling123.com/openapi/api"
+                user_id = uid.replace('@', '')[:30]
+                body = {'key': self.tuling_key, 'info': msg.encode('utf8'), 'userid': user_id}
+                r = requests.post(url, data=body)
+                respond = json.loads(r.text)
+                result = ''
+                if respond['code'] == 100000:
                     result = respond['text'].replace('<br>', '  ')
+                elif respond['code'] == 200000:
+                    if ('text' in respond):
+                        result = respond['text'].replace('<br>', '  ')
+                    else:
+                        result = respond['url']
+                elif respond['code'] == 302000:
+                    for k in respond['list']:
+                        result = result + u"【" + k['source'] + u"】 " +\
+                            k['article'] + "\t" + k['detailurl'] + "\n"
                 else:
-                    result = respond['url']
-            elif respond['code'] == 302000:
-                for k in respond['list']:
-                    result = result + u"【" + k['source'] + u"】 " +\
-                        k['article'] + "\t" + k['detailurl'] + "\n"
-            else:
-                result = respond['text'].replace('<br>', '  ')
+                    result = respond['text'].replace('<br>', '  ')
 
-            print '    ROBOT:', result
-            return result
+                print '    ROBOT:', result
+                return result
+            except:
+                if retryTimes > 0:
+                    self.tuling_auto_reply(uid, msg, retryTimes - 1)
+                else:
+                    print '[ERROR] Robot generate message failure'
         else:
             return u"知道啦"
 
@@ -69,8 +75,10 @@ class TulingWXBot(WXBot):
         if msg['msg_type_id'] == 1 and msg['content']['type'] == 0:  # reply to self
             self.auto_switch(msg)
         elif msg['msg_type_id'] == 4 and msg['content']['type'] == 0:  # text message from contact
-            self.send_msg_by_uid(self.tuling_auto_reply(msg['user']['id'], msg['content']['data']), msg['user']['id'])
+            self.send_msg_by_uid(self.tuling_auto_reply(msg['user']['id'], msg['content']['data'], 3), msg['user']['id'])
         elif msg['msg_type_id'] == 3 and msg['content']['type'] == 0:  # group text message
+            for m_key in msg['content']:
+                print '[msgConent]' m_key + ': ' + str(msg['content'][m_key])
             if 'detail' in msg['content']:
                 my_names = self.get_group_member_name(self.my_account['UserName'], msg['user']['id'])
                 if my_names is None:
@@ -91,7 +99,7 @@ class TulingWXBot(WXBot):
                     src_name = msg['content']['user']['name']
                     reply = 'to ' + src_name + ': '
                     if msg['content']['type'] == 0:  # text message
-                        reply += self.tuling_auto_reply(msg['content']['user']['id'], msg['content']['desc'])
+                        reply += self.tuling_auto_reply(msg['content']['user']['id'], msg['content']['desc'], 3)
                     else:
                         reply += u"对不起，只认字，其他杂七杂八的我都不认识，,,Ծ‸Ծ,,"
                     self.send_msg_by_uid(reply, msg['user']['id'])

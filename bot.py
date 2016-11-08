@@ -32,7 +32,10 @@ class TulingWXBot(WXBot):
             if respond['code'] == 100000:
                 result = respond['text'].replace('<br>', '  ')
             elif respond['code'] == 200000:
-                result = respond['url']
+                if ('text' in respond):
+                    result = respond['text'].replace('<br>', '  ')
+                else:
+                    result = respond['url']
             elif respond['code'] == 302000:
                 for k in respond['list']:
                     result = result + u"【" + k['source'] + u"】 " +\

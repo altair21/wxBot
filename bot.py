@@ -33,9 +33,9 @@ class TulingWXBot(WXBot):
                 if respond['code'] == 100000:
                     result = respond['text'].replace('<br>', '  ')
                 elif respond['code'] == 200000:
-                    if ('text' in respond):
-                        result = respond['text'].replace('<br>', '  ')
-                    else:
+                    # if ('text' in respond):
+                    #     result = respond['text'].replace('<br>', '  ')
+                    # else:
                         result = respond['url']
                 elif respond['code'] == 302000:
                     for k in respond['list']:
@@ -78,15 +78,18 @@ class TulingWXBot(WXBot):
             self.send_msg_by_uid(self.tuling_auto_reply(msg['user']['id'], msg['content']['data'], 3), msg['user']['id'])
         elif msg['msg_type_id'] == 3 and msg['content']['type'] == 0:  # group text message
             for m_key in msg['content']:
-                print '[msgConent]' + m_key + ': ' + str(msg['content'][m_key])
+                print m_key + ': ', msg['content'][m_key]
             if 'detail' in msg['content']:
                 my_names = self.get_group_member_name(self.my_account['UserName'], msg['user']['id'])
+                print 'my_names: ', my_names
                 if my_names is None:
                     my_names = {}
                 if 'NickName' in self.my_account and self.my_account['NickName']:
                     my_names['nickname2'] = self.my_account['NickName']
+                    print "my_names['nickname2']", my_names['nickname2']
                 if 'RemarkName' in self.my_account and self.my_account['RemarkName']:
                     my_names['remark_name2'] = self.my_account['RemarkName']
+                    print "my_names['remark_name2']", my_names['remark_name2']
 
                 is_at_me = False
                 for detail in msg['content']['detail']:
@@ -108,7 +111,7 @@ class TulingWXBot(WXBot):
 def main():
     bot = TulingWXBot()
     bot.DEBUG = True
-    bot.conf['qr'] = 'png'
+    bot.conf['qr'] = 'tty'
 
     bot.run()
 

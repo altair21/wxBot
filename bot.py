@@ -78,7 +78,7 @@ class TulingWXBot(WXBot):
             self.send_msg_by_uid(self.tuling_auto_reply(msg['user']['id'], msg['content']['data'], 3), msg['user']['id'])
         elif msg['msg_type_id'] == 3 and msg['content']['type'] == 0:  # group text message
             for m_key in msg['content']:
-                print '[msgConent]' m_key + ': ' + str(msg['content'][m_key])
+                print '[msgConent]' + m_key + ': ' + str(msg['content'][m_key])
             if 'detail' in msg['content']:
                 my_names = self.get_group_member_name(self.my_account['UserName'], msg['user']['id'])
                 if my_names is None:
